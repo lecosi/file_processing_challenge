@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: logyca_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: logyca_db
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    container_name: logyca_api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/logyca_db
+    depends_on:
+      - db
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: logyca_azure_emulator
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
