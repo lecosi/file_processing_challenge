@@ -62,13 +62,13 @@ El contenedor de N8N ya estará levantado usando tu BD como data-store, ahora co
 2. En la interfaz principal de n8n, clica en **Workflows**, luego en **Add Workflow**.
 3. Accede al menú de opciones arriba a la derecha (*tres puntos*) y selecciona **Import from File**.
 4. Sube el archivo `n8n_daily_sales_workflow.json` que encuentras en la raíz del proyecto.
-5. Autoriza las credenciales de conexión de la Base de Datos con PostgreSQL (en `/docker-compose.yml` puedes ver las credenciales) y activa el *toggle* principal de tu flujo (si aplica). Para testear, utiliza el botón "Test Workflow". 
+5. Autoriza las credenciales de conexión de la Base de Datos con PostgreSQL (en `/docker-compose.yml` puedes ver las credenciales. `cuando registres la info en el panel de N8N en la seccion de Host poner db y no localhost`) y activa el *toggle* principal de tu flujo (si aplica). Para testear, utiliza el botón "Test Workflow". 
 
 *(Nota: el flujo usa un disparador periódico "Schedule Trigger", consulta las celdas terminadas de los jobs y aplica `INSERT ... ON CONFLICT (date) DO UPDATE` para popular la tabla `sales_daily_summary`).*
 
 ---
 
-### Pasos para ejecutar corectamente el flujo de procesamiento
+### Pasos para ejecutar correctamente el flujo de procesamiento
 
 1. Luego de instalarlo y correr con docker toda la infra, se debe subir un archivo a traves del endpoint `/upload`. en la carpeta `/files_test` dejo un archivo con 2M de registros o si desean en la carpeta `/app/scripts` hay una logica para generar el archivo del tamaño que consideren.
 
