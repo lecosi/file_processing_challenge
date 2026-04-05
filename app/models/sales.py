@@ -11,3 +11,10 @@ class Sale(Base):
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     total = Column(Float, Computed("quantity * price"))
+
+
+class SalesDailySummary(Base):
+    __tablename__ = "sales_daily_summary"
+    
+    date = Column(Date, primary_key=True)
+    total_sales = Column(Float, nullable=False)

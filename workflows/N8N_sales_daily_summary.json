@@ -1,0 +1,146 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "927bef68-de1a-4358-acd2-0457b9b72927",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT date, SUM(total) as total_sales FROM sales GROUP BY date;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a473d6b5-6ff5-4ef1-acdd-02c85aab0941",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "qBHuADuIcKb4Xzyr",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sales_daily_summary",
+          "mode": "list",
+          "cachedResultName": "sales_daily_summary"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "total_sales": "={{ $json.total_sales }}",
+            "date": "={{ $json.date }}"
+          },
+          "matchingColumns": [
+            "date"
+          ],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_sales",
+              "displayName": "total_sales",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3198d20d-c6c8-4d59-a30a-ca1a6dfdf8e2",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "qBHuADuIcKb4Xzyr",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bf9fb797-0c60-4f1e-98bd-be8b2d388f48",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fac02dc3bcf5908059037ad260117d0938bdf67dca7f33b3d26891303273ed93"
+  },
+  "id": "kC4bG9k4Gj0jzHJT",
+  "tags": []
+}

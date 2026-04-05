@@ -34,6 +34,21 @@ services:
       - db
       - api
 
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: logyca_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=logyca_db
+      - DB_POSTGRESDB_USER=user
+      - DB_POSTGRESDB_PASSWORD=pass
+    depends_on:
+      - db
+
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     container_name: logyca_azure_emulator

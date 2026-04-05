@@ -9,7 +9,6 @@ class ProcessorService:
         self.repository = repository
 
     def process_csv_stream(self, lines_iterable, chunk_size: int = 10000):
-        # Skip CSV header
         try:
             header = next(lines_iterable)
             logger.debug("CSV header skipped: %s", header)
