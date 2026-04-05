@@ -1,9 +1,10 @@
-from pydantic_core import ValidationError
 from app.core.database import engine
-from app.models.jobs import Base
+from app.models.base import Base
+
+# Importar todos los modelos para que Base.metadata los conozca
+import app.models.jobs   # noqa: F401
+import app.models.sales  # noqa: F401
+
 
 def create_tables():
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        raise ValidationError('Error creating tables')
+    Base.metadata.create_all(bind=engine)

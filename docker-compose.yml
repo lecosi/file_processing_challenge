@@ -23,6 +23,17 @@ services:
     depends_on:
       - db
 
+  worker:
+    build: .
+    container_name: logyca_worker
+    command: python -m app.workers.sales_worker
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/logyca_db
+    depends_on:
+      - db
+      - api
+
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     container_name: logyca_azure_emulator

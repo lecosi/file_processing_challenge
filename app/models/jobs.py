@@ -1,8 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime
-from sqlalchemy.orm import declarative_base
+from app.models.base import Base
 
-Base = declarative_base()
 
 class JobStatusModel(Base):
     __tablename__ = "job_status"
