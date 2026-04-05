@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock, patch, call
 
 from app.workers.sales_worker import stream_blob_lines, process_message
+from app.services.processor_service import ProcessorService
+
 
 
 def make_msg(content: str) -> MagicMock:
@@ -31,7 +33,6 @@ class TestStreamBlobLines:
         assert result == ["header", "row1", "row2"]
 
     def test_multiple_chunks_reassembles_lines(self):
-        # Line split across two chunks
         blob_client = self._make_blob_client([b"hea", b"der\nrow1\n"])
         result = list(stream_blob_lines(blob_client))
         assert result == ["header", "row1"]
@@ -109,7 +110,7 @@ class TestProcessMessageSuccess:
         process_message(msg, db, queue_client, blob_service_client, azure_client)
 
         assert job_record.status == "COMPLETED"
-        assert db.commit.call_count == 2  # once for PROCESSING, once for COMPLETED
+        assert db.commit.call_count == 2
 
         azure_client.move_blob.assert_called_once_with(blob_name, "processed")
         queue_client.delete_message.assert_called_once_with(msg)
@@ -154,3 +155,46 @@ class TestProcessMessageError:
 
         with pytest.raises(RuntimeError, match="DB error"):
             process_message(msg, db, MagicMock(), MagicMock(), MagicMock())
+
+
+class TestProcessorServiceHeaderValidation:
+    """Tests for CSV header validation in ProcessorService.process_csv_stream."""
+
+    def _make_service(self) -> ProcessorService:
+        return ProcessorService(repository=MagicMock())
+
+    def test_valid_header_is_accepted(self):
+        """A CSV with the correct columns should process without raising."""
+        service = self._make_service()
+        service.repository.bulk_insert_sales_copy = MagicMock()
+        lines = iter(["date,product_id,quantity,price", "2026-01-01,1001,2,10.5"])
+        service.process_csv_stream(lines)
+
+    def test_invalid_header_raises_value_error(self):
+        """A CSV with wrong column names should raise ValueError immediately."""
+        service = self._make_service()
+        lines = iter(["wrong,columns,here,extra"])
+        with pytest.raises(ValueError, match="Invalid CSV header"):
+            service.process_csv_stream(lines)
+
+    def test_header_with_extra_whitespace_is_accepted(self):
+        """Column names with surrounding spaces should still be accepted after strip."""
+        service = self._make_service()
+        service.repository.bulk_insert_sales_copy = MagicMock()
+        lines = iter([" date , product_id , quantity , price ", "2026-01-01,1001,2,10.5"])
+        service.process_csv_stream(lines)
+
+    def test_missing_column_raises_value_error(self):
+        """A CSV missing one required column should raise ValueError."""
+        service = self._make_service()
+        # 'price' column is missing
+        lines = iter(["date,product_id,quantity"])
+        with pytest.raises(ValueError, match="Invalid CSV header"):
+            service.process_csv_stream(lines)
+
+    def test_empty_stream_returns_without_error(self):
+        """An empty CSV should return cleanly without raising or inserting."""
+        service = self._make_service()
+        lines = iter([])
+        service.process_csv_stream(lines)
+        service.repository.bulk_insert_sales_copy.assert_not_called()

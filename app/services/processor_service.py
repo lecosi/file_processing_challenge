@@ -3,6 +3,8 @@ from app.repositories.sales_repository import SalesRepository
 
 logger = logging.getLogger(__name__)
 
+EXPECTED_COLUMNS = {"date", "product_id", "quantity", "price"}
+
 
 class ProcessorService:
     def __init__(self, repository: SalesRepository):
@@ -11,7 +13,13 @@ class ProcessorService:
     def process_csv_stream(self, lines_iterable, chunk_size: int = 10000):
         try:
             header = next(lines_iterable)
-            logger.debug("CSV header skipped: %s", header)
+            actual_columns = {col.strip().lower() for col in header.split(",")}
+            if actual_columns != EXPECTED_COLUMNS:
+                raise ValueError(
+                    f"Invalid CSV header: '{header}'. "
+                    f"Expected columns: {sorted(EXPECTED_COLUMNS)}"
+                )
+            logger.debug("CSV header validated OK: %s", header)
         except StopIteration:
             logger.warning("CSV stream is empty, nothing to process.")
             return

@@ -11,11 +11,11 @@ from app.services.upload_service import UploadService, JobNotFoundException
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-_azure_client = AzureClient()
+azure_client = AzureClient()
 
 
 def get_upload_service(db: Session = Depends(get_db)) -> UploadService:
-    return UploadService(jobs_repo=JobsRepository(db), azure_client=_azure_client)
+    return UploadService(jobs_repo=JobsRepository(db), azure_client=azure_client)
 
 
 @router.post("/upload", response_model=JobResponse, status_code=202)
@@ -28,7 +28,7 @@ async def upload_sales_file(
 
     try:
         job = service.upload_file(file.file, file.filename)
-        return JobResponse(job_id=job.job_id, status=job.status)
+        return JobResponse.model_validate(job)
     except Exception as e:
         logger.error("Unexpected error during file upload: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -41,6 +41,11 @@ async def get_job_status(
 ):
     try:
         job = service.get_job_status(job_id)
-        return JobResponse(job_id=job.job_id, status=job.status)
+        return JobResponse.model_validate(job)
     except JobNotFoundException:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
+
+
+@router.get("/health", status_code=200, tags=["health"])
+async def health_check():
+    return {"status": "ok"}

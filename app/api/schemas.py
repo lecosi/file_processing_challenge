@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import date
+from datetime import datetime
 from typing import Optional
 from enum import Enum
 
@@ -13,6 +13,7 @@ class JobResponse(BaseModel):
     job_id: str
     status: JobStatus
     message: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

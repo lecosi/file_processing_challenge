@@ -91,7 +91,7 @@ def run_worker():
             except Exception as e:
                 logger.error("Unhandled error processing message '%s': %s", msg.content, e, exc_info=True)
                 db.rollback()
-                
+
                 try:
                     job_id = msg.content.split("|")[0]
                     job_record = db.query(JobStatusModel).filter(JobStatusModel.job_id == job_id).first()
@@ -101,6 +101,12 @@ def run_worker():
                         logger.info("Job '%s' marked as FAILED.", job_id)
                 except Exception as inner_e:
                     logger.error("Failed to update job status to FAILED: %s", inner_e, exc_info=True)
+
+                try:
+                    queue_client.delete_message(msg)
+                    logger.info("Failed message deleted from queue to prevent infinite retry.")
+                except Exception as del_e:
+                    logger.error("Could not delete failed message from queue: %s", del_e, exc_info=True)
             finally:
                 db.close()
                 logger.debug("Database session closed.")
